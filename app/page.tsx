@@ -1,65 +1,91 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import { supabase } from "./lib/supabaseClient";
 
 export default function Home() {
+  const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const sendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input) return;
+
+    const userMessage = { role: "user", content: input };
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+    setLoading(true);
+
+    try {
+      // 1️⃣ Enviar mensaje al backend
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: [...messages, userMessage] }),
+      });
+
+      const data = await res.json();
+      const botMessage = { role: "assistant", content: data.text };
+      setMessages((prev) => [...prev, botMessage]);
+
+      // 2️⃣ Guardar ambos mensajes en Supabase
+      await supabase.from("messages").insert([
+        { role: "user", content: userMessage.content },
+        { role: "assistant", content: botMessage.content },
+      ]);
+    } catch (err) {
+      console.error("Error enviando mensaje:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-900 text-white">
+      <h1 className="text-3xl font-bold mb-4">Chatbot IA - Demo</h1>
+      <div className="w-full max-w-md space-y-4">
+        {/* Chat Box */}
+        <div className="h-96 overflow-y-auto border border-gray-700 rounded-lg p-3 bg-gray-800">
+          {messages.map((m, i) => {
+            const isWhatsAppLink = m.content.includes("https://wa.me/");
+            return (
+              <div key={i} className="mb-2">
+                <strong>{m.role === "user" ? "🧑 Tú:" : "🤖 Bot:"}</strong>{" "}
+                {isWhatsAppLink ? (
+                  <a
+                    href={m.content.match(/https:\/\/wa\.me\/\d+/)?.[0]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block px-3 py-1 mt-1 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                  >
+                    Contactar por WhatsApp 📱
+                  </a>
+                ) : (
+                  m.content
+                )}
+              </div>
+            );
+          })}
+          {loading && <div>🤖 escribiendo...</div>}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+        {/* Input */}
+        <form onSubmit={sendMessage} className="flex gap-2">
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            className="flex-1 rounded-lg p-2 bg-gray-700 text-white"
+            placeholder="Escribe un mensaje..."
+          />
+          <button
+            type="submit"
+            className="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+            Enviar
+          </button>
+        </form>
+      </div>
+    </main>
   );
 }
