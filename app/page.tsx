@@ -43,7 +43,7 @@ export default function Home() {
 
   return (
     <main className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-900 text-white">
-      <h1 className="text-3xl font-bold mb-4">Chatbot IA - Demo</h1>
+      <h1 className="text-3xl font-bold mb-4 flex justify-center">IA - AGUSTINWEB ;)</h1>
       <div className="w-full max-w-md space-y-4">
         {/* Chat Box */}
         <div className="h-96 overflow-y-auto border border-gray-700 rounded-lg p-3 bg-gray-800">
