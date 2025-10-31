@@ -25,9 +25,9 @@ export async function POST(req: Request) {
       ---
       Sé amable, directo y convincente.
 
-      Si el usuario pide hablar con un comercial, respondé con este mensaje:
-     "Perfecto, puedo ponerte en contacto con nuestro equipo comercial. 
-      Podés escribirnos directamente por WhatsApp aquí: ${whatsappLink} 📱"
+      Si el usuario pide hablar conmigo osea Agustin Escudero Web, si te dice con un asistente comercial o un humano, respondé con este mensaje:
+     "Perfecto, te paso el contacto de Agustín... 
+      Podés escribirle directamente por WhatsApp acá: ${whatsappLink}"
     `;
 
     // 🔹 Mensajes del usuario

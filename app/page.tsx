@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "./lib/supabaseClient";
-import tenesis from "../public/tenesis.jpg"
+import tenesis from "../public/tenesis.jpg";
 import Image from "next/image";
 
 export default function Home() {
@@ -10,15 +10,16 @@ export default function Home() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // 🔹 Saludo automático de Scott al iniciar
+  // 🔹 Saludo automático de Tenesis al iniciar
   useEffect(() => {
     const greeting = {
       role: "assistant",
-      content: "👋 ¡Hola! Soy Tenesis, tu asistente de IA. ¿En qué puedo ayudarte?"
+      content: "👋 ¡Hola! Soy Tenesis, tu asistente de IA. ¿En qué puedo ayudarte?",
     };
     setMessages([greeting]);
   }, []);
 
+  // 🔹 Enviar mensaje al backend
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
@@ -29,7 +30,6 @@ export default function Home() {
     setLoading(true);
 
     try {
-      // 1️⃣ Enviar mensaje al backend
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -41,7 +41,7 @@ export default function Home() {
 
       setMessages((prev) => [...prev, botMessage]);
 
-      // 2️⃣ Guardar ambos mensajes en Supabase
+      // Guardar en Supabase
       await supabase.from("messages").insert([
         { role: "user", content: userMessage.content },
         { role: "assistant", content: botMessage.content },
@@ -55,33 +55,42 @@ export default function Home() {
 
   return (
     <main className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-900 text-white">
-      {/* 🔹 Título */}
-      {/* 🔹 Imagen de Scott */}
+      {/* 🔹 Avatar de Tenesis */}
       <Image
-        src={tenesis} // 👈 cambia la URL por la que quieras
-        alt="Scott - Asistente de IA"
+        src={tenesis}
+        alt="Tenesis - Asistente de IA"
         className="w-24 h-24 rounded-full mb-4 border-4 border-blue-500 shadow-lg"
       />
 
       <div className="w-full max-w-md space-y-4">
-        {/* Chat Box */}
+        {/* 🔹 Chat Box */}
         <div className="h-96 overflow-y-auto border border-gray-700 rounded-lg p-3 bg-gray-800">
           {messages.map((m, i) => {
-            const isWhatsAppLink = m.content.includes("https://wa.me/");
+            // Detectar si el mensaje incluye un enlace de WhatsApp
+            const match = m.content.match(/https:\/\/wa\.me\/\d+/);
+            const hasWhatsAppLink = !!match;
+            const link = match ? match[0] : null;
+
             return (
-              <div key={i} className="mb-2">
+              <div key={i} className="mb-3">
                 <strong>{m.role === "user" ? "🧑 Tú:" : "🤖 Tenesis:"}</strong>{" "}
-                {isWhatsAppLink ? (
-                  <a
-                    href={m.content.match(/https:\/\/wa\.me\/\d+/)?.[0]}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block px-3 py-1 mt-1 bg-green-500 text-white rounded-lg hover:bg-green-600"
-                  >
-                    Contactar por WhatsApp 📱
-                  </a>
+                {hasWhatsAppLink ? (
+                  <div className="mt-1 space-y-2">
+                    {/* Mostrar el texto original sin perder el mensaje del modelo */}
+                    <p>{m.content.replace(link!, "").trim()}</p>
+
+                    {/* Botón verde de WhatsApp */}
+                    <a
+                      href={link!}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                    >
+                      Contactar por WhatsApp 📱
+                    </a>
+                  </div>
                 ) : (
-                  m.content
+                  <p>{m.content}</p>
                 )}
               </div>
             );
@@ -89,7 +98,7 @@ export default function Home() {
           {loading && <div>🤖 escribiendo...</div>}
         </div>
 
-        {/* Input */}
+        {/* 🔹 Input */}
         <form onSubmit={sendMessage} className="flex gap-2">
           <input
             value={input}
