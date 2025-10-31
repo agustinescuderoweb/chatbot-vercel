@@ -1,16 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "./lib/supabaseClient";
+import tenesis from "../public/tenesis.jpg"
+import Image from "next/image";
 
 export default function Home() {
   const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // 🔹 Saludo automático de Scott al iniciar
+  useEffect(() => {
+    const greeting = {
+      role: "assistant",
+      content: "👋 ¡Hola! Soy Tenesis, tu asistente de IA. ¿En qué puedo ayudarte?"
+    };
+    setMessages([greeting]);
+  }, []);
+
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input) return;
+    if (!input.trim()) return;
 
     const userMessage = { role: "user", content: input };
     setMessages((prev) => [...prev, userMessage]);
@@ -27,6 +38,7 @@ export default function Home() {
 
       const data = await res.json();
       const botMessage = { role: "assistant", content: data.text };
+
       setMessages((prev) => [...prev, botMessage]);
 
       // 2️⃣ Guardar ambos mensajes en Supabase
@@ -43,7 +55,14 @@ export default function Home() {
 
   return (
     <main className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-900 text-white">
-      <h1 className="text-3xl font-bold mb-4 flex justify-center">IA - AGUSTINWEB ;)</h1>
+      {/* 🔹 Título */}
+      {/* 🔹 Imagen de Scott */}
+      <Image
+        src={tenesis} // 👈 cambia la URL por la que quieras
+        alt="Scott - Asistente de IA"
+        className="w-24 h-24 rounded-full mb-4 border-4 border-blue-500 shadow-lg"
+      />
+
       <div className="w-full max-w-md space-y-4">
         {/* Chat Box */}
         <div className="h-96 overflow-y-auto border border-gray-700 rounded-lg p-3 bg-gray-800">
@@ -51,7 +70,7 @@ export default function Home() {
             const isWhatsAppLink = m.content.includes("https://wa.me/");
             return (
               <div key={i} className="mb-2">
-                <strong>{m.role === "user" ? "🧑 Tú:" : "🤖 Bot:"}</strong>{" "}
+                <strong>{m.role === "user" ? "🧑 Tú:" : "🤖 Tenesis:"}</strong>{" "}
                 {isWhatsAppLink ? (
                   <a
                     href={m.content.match(/https:\/\/wa\.me\/\d+/)?.[0]}
